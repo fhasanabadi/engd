@@ -52,15 +52,17 @@ def angleFromFOV(xyxy, px = 600, fov = 60, ):
 
     return [h_angle, v_angle]
 
-def distanceCalc(distanceFromFrame: float, horizontalAngle: int, pitch = -15):
+def realDistance(distanceFromFrame: float, horizontalAngle: int, pitch = -15):
 
     #calculate the first angle of the triangle
     B = 90 - pitch
+    print('B in distanceCalc function:  ', B)
+    print('horizontalAngle in distanceCalc function:    ', horizontalAngle)
     #calculate the other angle of the triangle
     C = B - horizontalAngle
     distance = math.sin(math.radians(C)) * distanceFromFrame
     return distance
-print('distance calcualtion :',distanceCalc(12.4, 45))
+#print('distance calcualtion :',distanceCalc(12.4, 45))
 
 print(angleFromFOV([20,60,30,40]))
 

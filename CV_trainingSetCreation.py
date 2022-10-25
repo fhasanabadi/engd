@@ -159,17 +159,22 @@ def run_simulation(args, client):
                 frames = obj.detect(to_rgb_array(leftImage))
                 if len(frames):
                     for _ in frames:
+                        print('frame in the main function:  ', _)
                         print('distance of Obj  :')
                         ds = distanceFrame(leftImageD, _)
+                        angleFOV = []
                         angleFOV = angleFromFOV(_)
-                        realdst = distanceCalc(ds, angleFOV[0])
+                        print('angleFOV:    ', angleFOV)
+                        firstAngleFOV = angleFOV[0]
+                        realdst = realDistance(distanceFromFrame=ds, horizontalAngle=firstAngleFOV)            
                         print('read dst     :', realdst)
 
                         locationOfIncident = localization(vehicleTransform,realdst, angleFOV[1])
-                        print('location of the vehicle  ', locationOfIncident)
+                        print('location of the vehicle: ', vehicleTransform)
+                        print('location of the Incident  ', locationOfIncident)
 
 
-                        distanceCalc(leftImageD, _)
+                        #distanceCalc(leftImageD, _)
                 #print('second in the queue is :' ,sensor_queue))
                 sensor_queue.task_done()
                 #frames = obj.detect(to_rgb_array(sensor_queue.get()))

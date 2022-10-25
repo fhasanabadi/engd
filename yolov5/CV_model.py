@@ -137,6 +137,6 @@ for _ in m:
     ds = distanceFrame(arr, _)
     angleFOV = angleFromFOV(_)
     print('angleFOV :', angleFOV)
-    realdst = distanceCalc(ds, angleFOV[0])
+    realdst = realDistance(ds, angleFOV[0])
     print('realdst  :', realdst)
     
