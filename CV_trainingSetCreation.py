@@ -1,7 +1,7 @@
 from changeWeather import changeWeather
 from incident_spawner import getPreviousTransform, incidentCreator, centerFinder, incidentCreator2
 from car_spawner import *
-
+import pickle
 from utils_main import *
 from dsmanager import *
 #from changeWeather import *
@@ -41,7 +41,7 @@ def run_simulation(args, client):
         changeWeather(world, weatherNum = 13)
         bp = world.get_blueprint_library().filter('charger_2020')[0]
         bp_forActorAttribute = world.get_blueprint_library().filter('charger_2020')
-        locations = random.choices(world.get_map().get_spawn_points(), k= 60)
+        locations = random.choices(world.get_map().get_spawn_points(), k= 50)
 
         #print('actor attribute id: ' ,carla.ActorAttribute(bp_forActorAttribute))
 
@@ -49,16 +49,22 @@ def run_simulation(args, client):
             incident_list += incidentCreator(client, locations[_])
 
         #location for map 10:
-        #location01 = carla.Transform(carla.Location(x = -10.626226, y = 133.726013, z = 0.6), carla.Rotation(yaw = -179.647827))
+        location01_v = carla.Transform(carla.Location(x = -8.626226, y = 133.726013, z = 0.6), carla.Rotation(yaw = -179.647827))
+        location01_i = carla.Transform(carla.Location(x = -10.626226, y = 133.726013, z = 0.6), carla.Rotation(yaw = -179.647827))
         #location for map 01
         location01_forIncidents = carla.Transform(carla.Location(x = 13.568643, y = 2.467965, z = 0.6), carla.Rotation(yaw = 0.0, roll = 0.0000000))
         location01_forVehicle = carla.Transform(carla.Location(x = 13.568643, y = 2.467965, z = 0.6), carla.Rotation(yaw = 0.0, roll = 0.00000001))
-        incident_list += incidentCreator2(client, location01_forIncidents, 20.0)
-
+        #location01_forVehicle = carla.Transform(carla.Location(x=-49.406830, y=50.617756, z=-0.004063), carla.Rotation(pitch=0.0, yaw=0.0, roll=0.000177)) 
+        ####just one incident:
+        #incident_list += incidentCreator(location01_forIncidents)
+        #incident_list += incidentCreator2(client, location01_forVehicle, 10.0)
+        incident_list += incidentCreator2(client, location01_i,2)
+        print('transforms of the incidents', [str(_.get_location()) for _ in incident_list])
         map = world.get_map()
         #waypoints = map.get_waypoint(location01)[:1]
 
         locations_for_vehicles = random.choices(world.get_map().get_spawn_points(), k= 5)
+
         '''
         for _ in locations_for_vehicles:
             vehicle,sensor = vehicle_spawner(client = client , location = _)
@@ -67,7 +73,7 @@ def run_simulation(args, client):
         transformForVehicle = getPreviousTransform(world, location01_forVehicle, 1.0)
         #gnss false or true
         gnss = False
-        vehicle, sensors = vehicle_spawner(client = client, location = location01_forVehicle, sensor_tick=0.5, gnss=gnss)
+        vehicle, sensors = vehicle_spawner(client = client, location = location01_v, sensor_tick=0.2, gnss=gnss)
         vehicle_list.append(vehicle)
         #--------------------------Training Set Image Creation -----------------
         '''
@@ -96,6 +102,9 @@ def run_simulation(args, client):
             print('loc function is working')
         '''    
         sensor_queue = PriorityQueue()
+        detection_queue = Queue()
+        import pandas as pd
+        df =  pd.DataFrame(columns=('x','y','z'))
         
         ''' 
         sensors['left_camera'].listen(lambda image: sensor_queue.put((1,image)))#sensor_callback(image, sensor_queue))
@@ -173,6 +182,15 @@ def run_simulation(args, client):
                         print('location of the vehicle: ', vehicleTransform)
                         print('location of the Incident  ', locationOfIncident)
 
+                        df.loc[len(df)] = [str(locationOfIncident.location.x), str(locationOfIncident.location.y),str(locationOfIncident.location.z)]
+                        #detection_queue.put(locationOfIncident)
+                        waypoints = map.get_waypoint(locationOfIncident.location)
+                        print('road id :    ', waypoints.road_id)
+                        print('section id:  ', waypoints.section_id)
+                        print('lane_id:     ',waypoints.section_id)
+                        print('s:           ',waypoints.s)
+
+
 
                         #distanceCalc(leftImageD, _)
                 #print('second in the queue is :' ,sensor_queue))
@@ -237,6 +255,7 @@ def run_simulation(args, client):
         client.apply_batch([carla.command.DestroyActor(x) for x in sensor_list])
         client.apply_batch([carla.command.DestroyActor(x) for x in incident_list])
         world.apply_settings(original_settings)
+        df.to_csv('detections.csv')
 
 def main():
     argparser = argparse.ArgumentParser(

@@ -1,5 +1,6 @@
+from cv2 import line
 import torch
-import cv2, sys
+import cv2, sys, random
 try:
     sys.path.append('/home/fhasanabadi/Git/carla/PythonAPI/examples/01_tutorials_Farshad/01_main/yolov5')
     pass
@@ -7,6 +8,7 @@ except IndexError:
     pass
 import matplotlib.pylab as plt
 import numpy as np
+
 from torchvision import transforms
 from PIL import Image
 #from os.path import dirname, realpath, sep, pardir
@@ -25,12 +27,14 @@ try:
     from utils.torch_utils import select_device
     from utils.dataloaders import LoadImages
     from utils.general import Profile, xyxy2xywh
+    from utils.plots import Annotator
     
 except ImportError:
 
     from yolov5.utils.augmentations import letterbox
     #from yolov5.utils.general import check_img_size
     from yolov5.utils.general import check_img_size, non_max_suppression, scale_coords
+    from yolov5.utils.plots import Annotator
 
     yolov5_folder_path = '/home/fhasanabadi/Git/carla/PythonAPI/examples/01_tutorials_Farshad/01_main/yolov5'
     #print('system paths     :', sys.path)
@@ -103,6 +107,7 @@ class ObjectDetection():
         with self.dt[2]:
             pred = non_max_suppression(pred, self.conf_thres, self.iou_thres, max_det = 3 )
         det = []
+        annotator = Annotator(np.ascontiguousarray(img), line_width= 3, example = 'c')
         #convert the coordinates to the original imagesize
         for i, det in enumerate(pred):
             if len(det):
@@ -110,8 +115,20 @@ class ObjectDetection():
                 det[:, :4] = scale_coords(  im.shape[2:],det[:, :4],img.shape).round()
                 m = scale_coords(im.shape[2:], det[:, :4], im0.shape).round()
                 print('det one here' , det[:,:4])
+                #detection
+                for *xyxy, conf, cls in reversed(det):
+                    c = int(cls)
+                    print('xyxy :   ' , xyxy)
+                    annotator.box_label(xyxy, 'construction', color = (c,True))
+                    
+                im00 = annotator.result()
+                cv2.imwrite(yolov5_folder_path+'/images/{rnd}.jpg'.format(rnd = random.randint(0,1000)), im00)
+
+                    
             else:
                 print('no detection')
+            
+
         return det[:, :4].int().tolist()
         '''
         for *xyxy, conf, cls in reversed(det):
