@@ -32,7 +32,9 @@ def distanceFrame(arrpath, xyxy):
     return depth.mean()*1000
 
 def centerFinder(xyxy):
-
+    #find the center of the frame 
+    #input : [x,y,x,y]
+    #output: [Xc, Yc]
     x1, y1, x2, y2 = [int(_) for _ in xyxy]
     return [ int((xyxy[0]+ xyxy[2]) / 2) , int((xyxy[1] + xyxy[3]) / 2) ]
 
@@ -45,9 +47,11 @@ def angleFromFOV(xyxy, px = 600, fov = 60, ):
 
     #convert height and width to the relative angle of the frame
     #calculating the horizontal angle from top horizontal line
+    #h_angle known as alpha
     h_angle = int(xyCenterLst[1]/ px * fov)
 
     #calculating the vertical angle of the point relative to left vertical line
+    #v_angle known as theta
     v_angle = int(xyCenterLst[0] / px * fov)
 
     return [h_angle, v_angle]
@@ -59,7 +63,10 @@ def realDistance(distanceFromFrame: float, horizontalAngle: int, pitch = -15):
     print('B in distanceCalc function:  ', B)
     print('horizontalAngle in distanceCalc function:    ', horizontalAngle)
     #calculate the other angle of the triangle
-    C = B - horizontalAngle
+    ###########first version
+    #C = B - horizontalAngle
+    ##### corrected one:
+    C = 90 + pitch - horizontalAngle
     distance = math.sin(math.radians(C)) * distanceFromFrame
     return distance
 #print('distance calcualtion :',distanceCalc(12.4, 45))
@@ -72,12 +79,27 @@ print('a:',a,'\n', 'b:',b,'\n','c:',c,'\n','A:',A,'\n','B',B,'\n','C:',C,'\n')
 
 def localization(transformOfVehicle: carla.Transform, distance: float, v_angle, camera = 'left', fov = 60, yaw = -45):
     rotation = transformOfVehicle.rotation
+    newRotation = carla.Rotation()
     if camera == 'left':
-        rotation.yaw -= yaw - fov/2 +v_angle 
-    vehicleToIncidentNormal = rotation.get_forward_vector()
+        #first version
+        #newRotation.yaw = rotation.yaw + (yaw + fov/2  - v_angle )
+        #second version:
+        newRotationYaw = rotation.yaw - (abs(yaw) + fov/2 - v_angle)
+        if newRotationYaw > 180:
+            newRotationYaw = newRotationYaw - 360
+        elif newRotationYaw < -180:
+            newRotationYaw = 360 + newRotationYaw
+        
+        #working already first version
+        #newRotation.yaw = rotation.yaw - (yaw + fov/2 - v_angle)
+
+        newRotation.yaw = newRotationYaw
+
+        print('new rotation:    ', newRotation)
+    vehicleToIncidentNormal = newRotation.get_forward_vector()
 
     incidentLocation = transformOfVehicle.location + vehicleToIncidentNormal * distance
-    incidentTransform = carla.Transform(incidentLocation, rotation)
+    incidentTransform = carla.Transform(incidentLocation, newRotation)
 
     return incidentTransform
 

@@ -14,8 +14,15 @@ from yolov5.distanceCalculation import *
 def run_simulation(args, client):
 
 
-    obj = CV_model.ObjectDetection()
-    obj.init()
+    ### Set the modes of the simulation
+    #gnss false or true
+    gnss = False
+    sensors = True
+    vehicles = True
+    objectDetectionMode = True
+    if objectDetectionMode:
+        obj = CV_model.ObjectDetection()
+        obj.init()
     display_manager = None
     vehicle = None
     vehicle_list = []
@@ -37,7 +44,6 @@ def run_simulation(args, client):
             settings.fixed_delta_seconds = 0.05
             world.apply_settings(settings)
 
-
         changeWeather(world, weatherNum = 13)
         bp = world.get_blueprint_library().filter('charger_2020')[0]
         bp_forActorAttribute = world.get_blueprint_library().filter('charger_2020')
@@ -45,12 +51,12 @@ def run_simulation(args, client):
 
         #print('actor attribute id: ' ,carla.ActorAttribute(bp_forActorAttribute))
 
-        for _ in range(len(locations)):
-            incident_list += incidentCreator(client, locations[_])
+        #for _ in range(len(locations)):
+        #    incident_list += incidentCreator(client, locations[_])
 
         #location for map 10:
-        location01_v = carla.Transform(carla.Location(x = -8.626226, y = 133.726013, z = 0.6), carla.Rotation(yaw = -179.647827))
-        location01_i = carla.Transform(carla.Location(x = -10.626226, y = 133.726013, z = 0.6), carla.Rotation(yaw = -179.647827))
+        location01_v = carla.Transform(carla.Location(x = -4.626226, y = 133.026013, z = 0.6), carla.Rotation(yaw = -179.647827))
+        location01_i = carla.Transform(carla.Location(x = -14.626226, y = 133.726013, z = 0.6), carla.Rotation(yaw = -179.647827))
         #location for map 01
         location01_forIncidents = carla.Transform(carla.Location(x = 13.568643, y = 2.467965, z = 0.6), carla.Rotation(yaw = 0.0, roll = 0.0000000))
         location01_forVehicle = carla.Transform(carla.Location(x = 13.568643, y = 2.467965, z = 0.6), carla.Rotation(yaw = 0.0, roll = 0.00000001))
@@ -58,11 +64,25 @@ def run_simulation(args, client):
         ####just one incident:
         #incident_list += incidentCreator(location01_forIncidents)
         #incident_list += incidentCreator2(client, location01_forVehicle, 10.0)
-        incident_list += incidentCreator2(client, location01_i,2)
+        incident_list += incidentCreator2(client, location01_i,3)
         print('transforms of the incidents', [str(_.get_location()) for _ in incident_list])
         map = world.get_map()
+
+        bpBarrier = world.get_blueprint_library().filter('static.prop.streetbarrier')[0]
+
+        #the location of the objects detected in with the real distance
+        '''
+        location01_i = carla.Transform(carla.Location(x = -12.00, y = 134.6276013, z = 0.6), carla.Rotation(yaw = -179.647827))
+        incident_list.append(world.spawn_actor(bpBarrier, location01_i))
+        location01_i = carla.Transform(carla.Location(x = -12.8, y = 134.876013, z = 0.6), carla.Rotation(yaw = -179.647827))
+        incident_list.append(world.spawn_actor(bpBarrier, location01_i))
+
+        location01_i = carla.Transform(carla.Location(x = -13.37, y = 134.136013, z = 0.6), carla.Rotation(yaw = -179.647827))
+
+        incident_list.append(world.spawn_actor(bpBarrier, location01_i))
         #waypoints = map.get_waypoint(location01)[:1]
 
+        '''
         locations_for_vehicles = random.choices(world.get_map().get_spawn_points(), k= 5)
 
         '''
@@ -71,10 +91,10 @@ def run_simulation(args, client):
             vehicle_list.append(vehicle)
         '''
         transformForVehicle = getPreviousTransform(world, location01_forVehicle, 1.0)
-        #gnss false or true
-        gnss = False
-        vehicle, sensors = vehicle_spawner(client = client, location = location01_v, sensor_tick=0.2, gnss=gnss)
-        vehicle_list.append(vehicle)
+
+        if vehicles:
+            vehicle, sensors = vehicle_spawner(client = client, location = location01_v, sensor_tick=0.2, gnss=gnss)
+            vehicle_list.append(vehicle)
         #--------------------------Training Set Image Creation -----------------
         '''
         sensors['center_camera'].listen(lambda image: image.save_to_disk('output/%6dc.jpg'%image.frame))
@@ -110,8 +130,9 @@ def run_simulation(args, client):
         sensors['left_camera'].listen(lambda image: sensor_queue.put((1,image)))#sensor_callback(image, sensor_queue))
         sensors['left_depth_camera'].listen(lambda image: sensor_queue.put((2,depth_to_array(image))))#sensor_callback(image, sensor_queue))
         '''
-        sensors['left_camera'].listen(lambda image: sensor_queue.put((1,image)))#sensor_callback(image, sensor_queue))
-        sensors['left_depth_camera'].listen(lambda image: sensor_queue.put((2,depth_to_array(image))))#sensor_callback(image, sensor_queue))
+        if sensors:
+            sensors['left_camera'].listen(lambda image: sensor_queue.put((1,image)))#sensor_callback(image, sensor_queue))
+            sensors['left_depth_camera'].listen(lambda image: sensor_queue.put((2,depth_to_array(image))))#sensor_callback(image, sensor_queue))
         
         #sensors['left_depth_camera'].listen(lambda image: sensor_callback(image, sensor_queue))
 
@@ -120,12 +141,12 @@ def run_simulation(args, client):
         #sensors['left_camera','left_depth_camera'].listen(lambda image: obj.detect(to_rgb_array(image)))#image: image.save_to_disk('output/%6dr.jpg'%image.frame))
 
         #sensors['left_camera','left_depth_camera'].listen(lambda image: obj.detect(to_rgb_array(image)))#image: image.save_to_disk('output/%6dr.jpg'%image.frame))
-        if gnss:
-            
-            sensors['gnss'].listen(callback)
-        for _ in list(sensors.keys()):
-            sensor_list.append(sensors[_])
-
+       
+        if sensors:
+            for _ in list(sensors.keys()):
+                sensor_list.append(sensors[_])
+            if gnss:
+                sensors['gnss'].listen(callback)
         #sensor[0].listen(lambda image: image.save_to_disk('tutorial/ %.6d.jpg' % image.frame))
         #sensor[1].listen(lambda image: image.save_to_disk('tutorial/ 01%.6d.jpg' % image.frame))
         
@@ -156,45 +177,49 @@ def run_simulation(args, client):
             #print(i,'\n')
             if args.sync:
                 world.tick()
-            while not sensor_queue.empty():
-                #print(type(sensor_queue.get()))
-                
-                leftImage = sensor_queue.get()[1]
-                leftImageD = sensor_queue.get()[1]
-                vehicleTransform = vehicle.get_transform()
+            if objectDetectionMode:
+                while not sensor_queue.empty():
+                    #print(type(sensor_queue.get()))
+                    
+                    leftImage = sensor_queue.get()[1]
+                    leftImageD = sensor_queue.get()[1]
+                    vehicleTransform = vehicle.get_transform()
 
-                print('first Q is ' , leftImage)
-                frames =[]
-                frames = obj.detect(to_rgb_array(leftImage))
-                if len(frames):
-                    for _ in frames:
-                        print('frame in the main function:  ', _)
-                        print('distance of Obj  :')
-                        ds = distanceFrame(leftImageD, _)
-                        angleFOV = []
-                        angleFOV = angleFromFOV(_)
-                        print('angleFOV:    ', angleFOV)
-                        firstAngleFOV = angleFOV[0]
-                        realdst = realDistance(distanceFromFrame=ds, horizontalAngle=firstAngleFOV)            
-                        print('read dst     :', realdst)
+                    print('first Q is ' , leftImage)
+                    frames =[]
+                    frames = obj.detect(to_rgb_array(leftImage), i = i)
+                    if len(frames):
+                        for _ in frames:
+                            print('frame in the main function:  ', _)
+                            print('distance of Obj  :')
+                            ds = distanceFrame(leftImageD, _)
+                            angleFOV = []
+                            angleFOV = angleFromFOV(_)
+                            print('angleFOV:    ', angleFOV)
+                            firstAngleFOV = angleFOV[0]
+                            realdst = realDistance(distanceFromFrame=ds, horizontalAngle=firstAngleFOV)            
+                            print('read dst     :', realdst)
+                            
+                            #normal calculations
+                            #locationOfIncident = localization(vehicleTransform,realdst, angleFOV[1])
+                            #instead of realdistance use the distance :ds
+                            locationOfIncident = localization(vehicleTransform,ds , angleFOV[1])
+                            print('location of the vehicle: ', vehicleTransform)
+                            print('location of the Incident  ', locationOfIncident)
 
-                        locationOfIncident = localization(vehicleTransform,realdst, angleFOV[1])
-                        print('location of the vehicle: ', vehicleTransform)
-                        print('location of the Incident  ', locationOfIncident)
-
-                        df.loc[len(df)] = [str(locationOfIncident.location.x), str(locationOfIncident.location.y),str(locationOfIncident.location.z)]
-                        #detection_queue.put(locationOfIncident)
-                        waypoints = map.get_waypoint(locationOfIncident.location)
-                        print('road id :    ', waypoints.road_id)
-                        print('section id:  ', waypoints.section_id)
-                        print('lane_id:     ',waypoints.section_id)
-                        print('s:           ',waypoints.s)
+                            df.loc[len(df)] = [str(locationOfIncident.location.x), str(locationOfIncident.location.y),str(locationOfIncident.location.z)]
+                            #detection_queue.put(locationOfIncident)
+                            waypoints = map.get_waypoint(locationOfIncident.location)
+                            print('road id :    ', waypoints.road_id)
+                            print('section id:  ', waypoints.section_id)
+                            print('lane_id:     ',waypoints.section_id)
+                            print('s:           ',waypoints.s)
 
 
 
                         #distanceCalc(leftImageD, _)
                 #print('second in the queue is :' ,sensor_queue))
-                sensor_queue.task_done()
+                    sensor_queue.task_done()
                 #frames = obj.detect(to_rgb_array(sensor_queue.get()))
                 #distanceCalc(sensor_queue.get(),frames)
                 #sensor_queue.task_done()

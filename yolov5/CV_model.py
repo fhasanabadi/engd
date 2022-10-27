@@ -80,7 +80,7 @@ class ObjectDetection():
         #self.model.warmup(imgsz=(1 if self.pt else bs, 3, self.imgsz, self.imgsz))
         self.dt = (Profile(), Profile(), Profile())
 
-    def detect(self, img):
+    def detect(self, img, i):
         im0 = img.copy()
         gn = torch.tensor(im0.shape)[[1, 0, 1, 0]]  # normalization gain whwh
 
@@ -139,7 +139,7 @@ class ObjectDetection():
             print('cls : ', cls)
         print('the original ones: ', '\n', pred)
 '''
-obj = ObjectDetection()
+'''obj = ObjectDetection()
 obj.init()
 m = obj.detect(img= img)
 #m = m.int().tolist()
@@ -157,3 +157,4 @@ for _ in m:
     realdst = realDistance(ds, angleFOV[0])
     print('realdst  :', realdst)
     
+'''
