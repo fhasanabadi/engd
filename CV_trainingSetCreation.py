@@ -4,6 +4,7 @@ from car_spawner import *
 import pickle
 from utils_main import *
 from dsmanager import *
+from changeMap import changeMap
 #from changeWeather import *
 import random
 from yolov5 import CV_model
@@ -33,6 +34,7 @@ def run_simulation(args, client):
     try:
         #get the world
         i = 0
+        #world = changeMap(client, 'Town01')
         world = client.get_world()
         original_settings = world.get_settings()
 
@@ -44,7 +46,7 @@ def run_simulation(args, client):
             settings.fixed_delta_seconds = 0.05
             world.apply_settings(settings)
 
-        changeWeather(world, weatherNum = 13)
+        #changeWeather(world, weatherNum = 13)
         bp = world.get_blueprint_library().filter('charger_2020')[0]
         bp_forActorAttribute = world.get_blueprint_library().filter('charger_2020')
         locations = random.choices(world.get_map().get_spawn_points(), k= 50)
@@ -53,18 +55,24 @@ def run_simulation(args, client):
 
         #for _ in range(len(locations)):
         #    incident_list += incidentCreator(client, locations[_])
+        town= 10
+        #location for map 10: ------------------------------------------------------------------------------------
+        if town == 10:
+            location01_v = carla.Transform(carla.Location(x = 10.626226, y = 130.026013, z = 0.6), carla.Rotation(yaw = -179.647827))
+            location01_i = carla.Transform(carla.Location(x = -14.626226, y = 133.726013, z = 0.6), carla.Rotation(yaw = -179.647827))
 
-        #location for map 10:
-        location01_v = carla.Transform(carla.Location(x = -4.626226, y = 133.026013, z = 0.6), carla.Rotation(yaw = -179.647827))
-        location01_i = carla.Transform(carla.Location(x = -14.626226, y = 133.726013, z = 0.6), carla.Rotation(yaw = -179.647827))
-        #location for map 01
+        #location for map 02: ------------------------------------------------------------------------------------
+        if town == 2:
+            location01_v = carla.Transform(carla.Location(x = 181.24, y = 187.776013, z = 0.6), carla.Rotation(yaw = -179.997827))
+            location01_i = carla.Transform(carla.Location(x = 175.24, y = 188.776013, z = 0.6), carla.Rotation(yaw = -0.007827))
+
         location01_forIncidents = carla.Transform(carla.Location(x = 13.568643, y = 2.467965, z = 0.6), carla.Rotation(yaw = 0.0, roll = 0.0000000))
         location01_forVehicle = carla.Transform(carla.Location(x = 13.568643, y = 2.467965, z = 0.6), carla.Rotation(yaw = 0.0, roll = 0.00000001))
         #location01_forVehicle = carla.Transform(carla.Location(x=-49.406830, y=50.617756, z=-0.004063), carla.Rotation(pitch=0.0, yaw=0.0, roll=0.000177)) 
         ####just one incident:
         #incident_list += incidentCreator(location01_forIncidents)
         #incident_list += incidentCreator2(client, location01_forVehicle, 10.0)
-        incident_list += incidentCreator2(client, location01_i,3)
+        incident_list += incidentCreator2(client, location01_i,1)
         print('transforms of the incidents', [str(_.get_location()) for _ in incident_list])
         map = world.get_map()
 
@@ -195,6 +203,9 @@ def run_simulation(args, client):
                             ds = distanceFrame(leftImageD, _)
                             angleFOV = []
                             angleFOV = angleFromFOV(_)
+                            print('angleFOV vertical is :   ', angleFOV[1])
+                            if (angleFOV[1] < 20) or (angleFOV[1] > 40) :
+                                continue
                             print('angleFOV:    ', angleFOV)
                             firstAngleFOV = angleFOV[0]
                             realdst = realDistance(distanceFromFrame=ds, horizontalAngle=firstAngleFOV)            
