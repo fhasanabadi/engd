@@ -1,3 +1,4 @@
+from numpy import angle
 from changeWeather import changeWeather
 from incident_spawner import getPreviousTransform, incidentCreator, centerFinder, incidentCreator2
 from car_spawner import *
@@ -8,6 +9,7 @@ from changeMap import changeMap
 #from changeWeather import *
 import random
 from yolov5 import CV_model
+from yolov5.instanceLocalization import instanceLocalization
 from image_converter import to_rgb_array, depth_to_array 
 #from object_detection import ObjectDetection
 #from yolov5 import CV_model02
@@ -185,6 +187,9 @@ def run_simulation(args, client):
             #print(i,'\n')
             if args.sync:
                 world.tick()
+            
+            #object detection mode working
+            '''
             if objectDetectionMode:
                 while not sensor_queue.empty():
                     #print(type(sensor_queue.get()))
@@ -225,6 +230,48 @@ def run_simulation(args, client):
                             print('section id:  ', waypoints.section_id)
                             print('lane_id:     ',waypoints.section_id)
                             print('s:           ',waypoints.s)
+
+
+
+                        #distanceCalc(leftImageD, _)
+                #print('second in the queue is :' ,sensor_queue))
+                    sensor_queue.task_done()
+                #frames = obj.detect(to_rgb_array(sensor_queue.get()))
+                #distanceCalc(sensor_queue.get(),frames)
+                #sensor_queue.task_done()
+                #print(sensor_queue.qsize())
+
+                #print('type of first element    :', type(sensor_queue.get()))
+                #print('type of second element    :', type(sensor_queue.get()))
+                #the order is not necessarily the order above
+
+            '''
+            
+            if objectDetectionMode:
+                while not sensor_queue.empty():
+                    #print(type(sensor_queue.get()))
+                    
+                    leftImage = sensor_queue.get()[1]
+                    leftImageD = sensor_queue.get()[1]
+                    vehicleTransform = vehicle.get_transform()
+
+                    print('first Q is ' , leftImage)
+                    frames =[]
+                    frames = obj.detect(to_rgb_array(leftImage), i = i)
+                    if len(frames):
+                        for _ in frames:
+                            localization = instanceLocalization(xyxy = _, angleThresholdForDetection=15)
+                            if localization.Continue:
+                                locationOfIncident = localization.localization(transformOfVehicle= vehicleTransform, depthArray=leftImageD, )
+                                print(locationOfIncident)
+                            
+                                df.loc[len(df)] = [str(locationOfIncident.location.x), str(locationOfIncident.location.y),str(locationOfIncident.location.z)]
+                            #detection_queue.put(locationOfIncident)
+                                waypoints = map.get_waypoint(locationOfIncident.location)
+                                print('road id :    ', waypoints.road_id)
+                                print('section id:  ', waypoints.section_id)
+                                print('lane_id:     ',waypoints.section_id)
+                                print('s:           ',waypoints.s)
 
 
 
