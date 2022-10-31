@@ -57,16 +57,26 @@ def run_simulation(args, client):
 
         #for _ in range(len(locations)):
         #    incident_list += incidentCreator(client, locations[_])
-        town= 10
+        town= 5
         #location for map 10: ------------------------------------------------------------------------------------
         if town == 10:
             location01_v = carla.Transform(carla.Location(x = 10.626226, y = 130.026013, z = 0.6), carla.Rotation(yaw = -179.647827))
             location01_i = carla.Transform(carla.Location(x = -14.626226, y = 133.726013, z = 0.6), carla.Rotation(yaw = -179.647827))
 
-        #location for map 02: ------------------------------------------------------------------------------------
-        if town == 2:
+        #location for map 01: ------------------------------------------------------------------------------------
+        if town == 1:
             location01_v = carla.Transform(carla.Location(x = 181.24, y = 187.776013, z = 0.6), carla.Rotation(yaw = -179.997827))
             location01_i = carla.Transform(carla.Location(x = 175.24, y = 188.776013, z = 0.6), carla.Rotation(yaw = -0.007827))
+        #location for map 03: ------------------------------------------------------------------------------------
+        if town == 3:
+            location01_v = carla.Transform(carla.Location(x = 39.87, y = 207.797, z = 0.6), carla.Rotation(yaw = 0.0))
+            location01_i = carla.Transform(carla.Location(x = 50.33, y = 204.776013, z = 0.6), carla.Rotation(yaw = -0.007827))
+        #location for map 05: ------------------------------------------------------------------------------------
+        if town == 5:
+            location01_v = carla.Transform(carla.Location(x = -50.62 , y = -66.388, z = 0.6), carla.Rotation(yaw = 90.0))
+            location01_i = carla.Transform(carla.Location(x = -49.5, y = -50.0, z = 0.6), carla.Rotation(yaw = 90.0))
+
+
 
         location01_forIncidents = carla.Transform(carla.Location(x = 13.568643, y = 2.467965, z = 0.6), carla.Rotation(yaw = 0.0, roll = 0.0000000))
         location01_forVehicle = carla.Transform(carla.Location(x = 13.568643, y = 2.467965, z = 0.6), carla.Rotation(yaw = 0.0, roll = 0.00000001))

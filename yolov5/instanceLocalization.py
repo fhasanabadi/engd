@@ -51,6 +51,8 @@ class instanceLocalization():
         v_angle = int(self.frameCenter[0] / imageDim * imageFOV )
         self.incidentAngles = [h_angle, v_angle]
 
+
+        #set the condition whether continue with localization of the image or not
         if (v_angle < self.angleThresholdForDetection ) or (v_angle > self.imageFOV - self.angleThresholdForDetection):
             self.Continue = False
         else:

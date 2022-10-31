@@ -20,12 +20,14 @@ def run_simulation(args, client):
     sensor_list = []
     incident_list = []
     timer = CustomTimer()
+    
 
 
     try:
         world = client.get_world()
         original_settings = world.get_settings()
-
+        world = changeMap(client = client, town='Town05')
+        '''
         if args.sync:
             traffic_manager = client.get_trafficmanager(8000)
             settings = world.get_settings()
@@ -36,8 +38,8 @@ def run_simulation(args, client):
 
        # changeWeather(world, weatherNum=0)
         print(client.get_available_maps())
-        world = client.load_world('Town01')
-
+        #world = client.load_world('Town01')
+        '''
         
 
         i = 0
